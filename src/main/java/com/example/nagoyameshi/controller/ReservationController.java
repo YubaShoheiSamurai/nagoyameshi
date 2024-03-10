@@ -56,7 +56,7 @@ public class ReservationController {
 			@PageableDefault(page = 0, size = 10, sort = "id", direction = Direction.ASC) Pageable pageable,
 			RedirectAttributes redirectAttributes,
 			Model model) {
-		User user = userDetailsImpl.getUser();
+		User user = userRepository.getReferenceById(userDetailsImpl.getUser().getId());    
 		if ("ROLE_FREE_MEMBER".equals(user.getRole().getName())) {
 			redirectAttributes.addFlashAttribute("subscriptionMessage", "この機能は有料プランに加入しないと使用できません");
 			return "redirect:/subscription/register";
@@ -73,8 +73,8 @@ public class ReservationController {
 
 	@GetMapping("/restaurants/{id}/reservations/input")
 	public String input(@AuthenticationPrincipal UserDetailsImpl userDetailsImpl, @PathVariable(name = "id") Integer id,
-			@ModelAttribute @Validated ReservationInputForm reservationInputForm,
 			@PageableDefault(page = 0, size = 5, sort = "id", direction = Direction.ASC) Pageable pageable,
+			@ModelAttribute @Validated ReservationInputForm reservationInputForm,
 			BindingResult bindingResult,
 			RedirectAttributes redirectAttributes,
 			Model model) {
@@ -100,13 +100,7 @@ public class ReservationController {
 		String reservationDate = reservationInputForm.getReservationDate();
 		String reservationTime = reservationInputForm.getReservationTime();
 
-		if (reservationTime.length() < 3) {
-			FieldError fieldError = new FieldError(bindingResult.getObjectName(), "reservationTime",
-					"予約時間が未入力です。");
-			bindingResult.addError(fieldError);
-		}
-
-		if (reservationDate != null && reservationTime != null) {
+		if (!reservationDate.isEmpty() && !reservationTime.isEmpty()) {
 			if (!reservationService.isReservationDateWhenCurrentTimeAfter(reservationDate, reservationTime)) {
 				FieldError fieldError = new FieldError(bindingResult.getObjectName(), "reservationTime",
 						"予約時間を過ぎています。");
@@ -140,7 +134,7 @@ public class ReservationController {
 			@AuthenticationPrincipal UserDetailsImpl userDetailsImpl, RedirectAttributes redirectAttributes,
 			Model model) {
 		Restaurant restaurant = restaurantRepository.getReferenceById(id);
-		User user = userDetailsImpl.getUser();
+		User user = userRepository.getReferenceById(userDetailsImpl.getUser().getId());    
 		if ("ROLE_FREE_MEMBER".equals(user.getRole().getName())) {
 			redirectAttributes.addFlashAttribute("subscriptionMessage", "この機能は有料プランに加入しないと使用できません");
 			return "redirect:/subscription/register";

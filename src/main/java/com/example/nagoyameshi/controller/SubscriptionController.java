@@ -44,7 +44,7 @@ public class SubscriptionController {
     public String create(@AuthenticationPrincipal UserDetailsImpl userDetailsImpl, @RequestParam String paymentMethodId, RedirectAttributes redirectAttributes) {      
         User user = userRepository.getReferenceById(userDetailsImpl.getUser().getId());  
         
-        if (user.getStripeCustomerId().isEmpty()) { 
+        if (user.getStripeCustomerId() == null || user.getStripeCustomerId().isEmpty()) { 
             Customer customer = stripeService.createCustomer(user.getName(), user.getEmail(), paymentMethodId);
             userService.createStripeCustomer(user, customer.getId());
         }
@@ -93,7 +93,7 @@ public class SubscriptionController {
         if (subscription != null) {
             stripeService.cancelSubscription(subscription);
             userService.updateRole(user, "ROLE_FREE_MEMBER");
-            userService.refreshAuthenticationByRole("ROLE_PAID_MEMBER");
+            userService.refreshAuthenticationByRole("ROLE_FREE_MEMBER");
             redirectAttributes.addFlashAttribute("successMessage", "有料プランを解約しました。");    
         } else {
             redirectAttributes.addFlashAttribute("errorMessage", "有料プランの解約に失敗しました。");    

@@ -16,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.nagoyameshi.entity.Restaurant;
 import com.example.nagoyameshi.entity.User;
 import com.example.nagoyameshi.repository.RestaurantRepository;
+import com.example.nagoyameshi.repository.UserRepository;
 import com.example.nagoyameshi.security.UserDetailsImpl;
 import com.example.nagoyameshi.service.FavariteService;
 
@@ -23,18 +24,24 @@ import com.example.nagoyameshi.service.FavariteService;
 @RequestMapping("/favarites")
 public class FavaritesController {
 	private final RestaurantRepository restaurantRepository;
+	private final UserRepository userRepository;
 	private final FavariteService favariteService;
 
-	public FavaritesController(RestaurantRepository restaurantRepository, FavariteService favariteService) {
+	public FavaritesController(RestaurantRepository restaurantRepository, UserRepository userRepository, FavariteService favariteService) {
 		this.restaurantRepository = restaurantRepository;
+		this.userRepository = userRepository;
 		this.favariteService = favariteService;
 	}
 
 	@GetMapping
 	public String index(@AuthenticationPrincipal UserDetailsImpl userDetailsImpl, Model model,
-			@PageableDefault(page = 0, size = 10, sort = "id", direction = Direction.ASC) Pageable pageable) {
+			@PageableDefault(page = 0, size = 10, sort = "id", direction = Direction.ASC) Pageable pageable, RedirectAttributes redirectAttributes) {
 
-		User user = userDetailsImpl.getUser();
+		User user = userRepository.getReferenceById(userDetailsImpl.getUser().getId());    
+		if ("ROLE_FREE_MEMBER".equals(user.getRole().getName())) {
+			redirectAttributes.addFlashAttribute("subscriptionMessage", "この機能は有料プランに加入しないと使用できません");
+			return "redirect:/subscription/register";
+		}
 		Page<Restaurant> restaurantPage = restaurantRepository.findByFavariteUsersId(user.getId(), pageable);
 
 		model.addAttribute("restaurantPage", restaurantPage);

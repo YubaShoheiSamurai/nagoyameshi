@@ -20,6 +20,7 @@ import com.example.nagoyameshi.entity.User;
 import com.example.nagoyameshi.form.ReviewForm;
 import com.example.nagoyameshi.repository.RestaurantRepository;
 import com.example.nagoyameshi.repository.ReviewRepository;
+import com.example.nagoyameshi.repository.UserRepository;
 import com.example.nagoyameshi.security.UserDetailsImpl;
 import com.example.nagoyameshi.service.ReviewService;
 
@@ -28,12 +29,14 @@ import com.example.nagoyameshi.service.ReviewService;
 public class ReviewController {
 	private final ReviewRepository reviewRepository;
 	private final RestaurantRepository restaurantRepository;
+	private final UserRepository userRepository;
 	private final ReviewService reviewService;
 
-	public ReviewController(ReviewRepository reviewRepository, RestaurantRepository restaurantRepository,
+	public ReviewController(ReviewRepository reviewRepository, RestaurantRepository restaurantRepository, UserRepository userRepository,
 			ReviewService reviewServic) {
 		this.reviewRepository = reviewRepository;
 		this.restaurantRepository = restaurantRepository;
+		this.userRepository = userRepository;
 		this.reviewService = reviewServic;
 	}
 
@@ -41,7 +44,7 @@ public class ReviewController {
 	public String show(@PathVariable(name = "id") Integer restaurantId,
 			@AuthenticationPrincipal UserDetailsImpl userDetailsImpl, RedirectAttributes redirectAttributes,
 			Model model) {
-		User user = userDetailsImpl.getUser();
+		User user = userRepository.getReferenceById(userDetailsImpl.getUser().getId());    
 		if ("ROLE_FREE_MEMBER".equals(user.getRole().getName())) {
 			redirectAttributes.addFlashAttribute("subscriptionMessage", "この機能は有料プランに加入しないと使用できません");
 			return "redirect:/subscription/register";
